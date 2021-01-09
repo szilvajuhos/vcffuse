@@ -2,7 +2,7 @@
 Tests for `vcffuse` module.
 """
 import pytest
-from vcffuse import CreateSVGPicture, ExonCoords
+from vcffuse import CreateSVGPicture, SnpEffParser, ExonCoords, FusionMaker
 from intervaltree import Interval, IntervalTree
 
 class TestVcffuse(object):
@@ -27,6 +27,20 @@ class TestVcffuse(object):
         assert True == SVG_creator.verbose
         counter = SVG_creator.make_SVG_file(exon_intervals, "SVG_creator_test.svg", 9, "PRIME5", "PRIME3")
         assert 10 == counter
+
+    def test_snpEff_parser(self):
+        assert None != SnpEffParser.SnpEffParser()
+
+    def test_ExonCoords(self):
+        assert None != ExonCoords.ExonCoords.empty()
+
+    def test_FusionMaker(self):
+        # assert None != FusionMaker.FusionMaker(ExonCoords.ExonCoords.empty(),
+        #                                        ExonCoords.ExonCoords.empty(),
+        #                                        1,
+        #                                        200,
+        #                                        3)
+        pass
 
     @classmethod
     def teardown_class(cls):
