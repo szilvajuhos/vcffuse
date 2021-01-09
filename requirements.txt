@@ -1,1 +1,7 @@
 wheel>=0.22
+
+intervaltree~=3.0.2
+click~=7.1.2
+requests~=2.24.0
+svgwrite~=1.4
+setuptools~=49.6.0
