@@ -6,7 +6,7 @@ from vcffuse import CreateSVGPicture, SnpEffParser, ExonCoords, FusionMaker
 from intervaltree import Interval, IntervalTree
 
 class TestVcffuse(object):
-
+    # These are the boilerplate methods, keep them here for clarity
     @classmethod
     def setup_class(cls):
         pass
@@ -14,6 +14,12 @@ class TestVcffuse(object):
     def test_something(self):
         pass
 
+    @classmethod
+    def teardown_class(cls):
+        pass
+
+    # Here comes "the thing and the whole of the thing"
+    #
     def test_SVG_creation(self):
         exon_intervals = ( IntervalTree(
             [Interval(0, 300),
@@ -40,8 +46,4 @@ class TestVcffuse(object):
         #                                        1,
         #                                        200,
         #                                        3)
-        pass
-
-    @classmethod
-    def teardown_class(cls):
         pass

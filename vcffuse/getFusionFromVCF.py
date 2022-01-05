@@ -743,6 +743,7 @@ def print_SV(vcf, svg, rest):
                                             genes_to_join[1].gene_name)
                         fusion.print_properties()
 
+
 def find_5prime_for_inversion(start, end, gtj: list):
     """
     We have two canonical transcripts, and we want to find out which one is the 5' and the 3' .

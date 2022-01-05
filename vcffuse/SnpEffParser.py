@@ -1,3 +1,5 @@
+import re
+
 class SnpEffParser:
     """
         We are processing an snpEff annotation entry (not a VCF line, but the ANN= stuff)
@@ -7,6 +9,10 @@ class SnpEffParser:
     def __init__(self):
         self._ann_list = list()  # list of annotations
         self._ann_keys = list()
+        # storing regex patterns that we need for annotation parsing
+        self._ann_regex = {}    # dict of regex patterns matching annotations
+        self._ann_regex["comment"] = re.compile("^#.*")
+        self._ann_regex["gene_fusion"] = re.compile(".*gene_fusion.*")
 
     @property
     def ann_keys(self):
