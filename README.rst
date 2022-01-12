@@ -12,7 +12,7 @@ Visualising gene fusions in VCFs
 ================================
 
 The main purpose is to visualise structural variants in a similar way
-is it is done at this_ article.
+like in this_ article.
 
 .. _this: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5728033/figure/onco12246-fig-0006/?report=objectonly
 
