@@ -6,6 +6,8 @@ import svgwrite
 from svgwrite import cm, mm, rgb
 import re
 
+import pdb
+
 server = "https://rest.ensembl.org"
 
 
@@ -403,31 +405,36 @@ class SV_Maker:
             prime5part = ExonCoords(self.prime5.chromosome, self.prime5.strand,
                                     self.prime5.breakpoint, self.prime5.gene_name,
                                     self.get_left_part(self.prime5))
-        else:
-            prime3part = ExonCoords(self.prime3.chromosome, self.prime3.strand,
-                                    self.prime3.breakpoint, self.prime3.gene_name,
-                                    self.get_right_part(self.prime3))
+        else: # DIR_RIGHT
+            prime5part = ExonCoords(self.prime5.chromosome, self.prime5.strand,
+                                    self.prime5.breakpoint, self.prime5.gene_name,
+                                    self.get_right_part(self.prime5))
         if p3dir == self.DIR_LEFT:
             prime3part = ExonCoords(self.prime3.chromosome, self.prime3.strand,
                                     self.prime3.breakpoint, self.prime3.gene_name,
                                     self.get_left_part(self.prime3))
-        else:
+        else: # DIR_RIGHT
             prime3part = ExonCoords(self.prime3.chromosome, self.prime3.strand,
                                     self.prime3.breakpoint, self.prime3.gene_name,
                                     self.get_right_part(self.prime3))
 
+        # TODO: DRY it out
         if p5dir == self.DIR_LEFT and p3dir == self.DIR_LEFT:
-            # forward antiparallel
+            # forward antiparallel or reverse parallel
             # we have to turn the reverse strand 3' gene backwards
             prime3part = self.turn_backwards(prime3part)
             # and have to stick it to the 5' part
             # we are ignoring chromosomes this time
-            # TODO: DRY it out
-            based05p = self.shift_left_to(0, prime5part)
-            based03p = self.shift_left_to(based05p.end(), prime3part)
-            print(based05p)
-            print(based03p)
-            return (based05p, based03p)
+        elif p5dir == self.DIR_RIGHT and p3dir == self.DIR_LEFT:
+            prime5part = self.turn_backwards(prime5part)
+
+        based05p = self.shift_left_to(0, prime5part)
+        based03p = self.shift_left_to(based05p.end(), prime3part)
+        print(based05p)
+        print(based03p)
+
+        return (based05p, based03p)
+            
 
     def shift_left_to(self, new_base: int, exs: ExonCoords):
         rebased = IntervalTree()
@@ -641,7 +648,7 @@ def print_SV(vcf, svg, rest):
                 mate_ID = snpEff_ann[0].split(";")[1].replace("MATEID=", "")
                 print("Searching ", mate_ID)
                 if mate_ID in BND_dict.keys():
-                    # instead of the gene IDs we should go for the transcript IDs
+                    # instead of gene IDs we should go for transcript IDs
                     # that are a bit more complicated to get
                     ENS_IDs = get_transcript_IDs(snpEff_ann[10])
                     genes_to_join = [ExonCoords.fromTuple(get_CDS_coords(ENS_IDs[0], rest)),
@@ -652,8 +659,31 @@ def print_SV(vcf, svg, rest):
                     # c) genes are RF, join is [mate[B - [mate[B
                     # see VCF documentation "5.4 Specifying complex rearrangements with breakends"
                     if genes_to_join[0].strand == genes_to_join[1].strand:
-                        print("Parallel strand mates", sv_call[2], sv_call[4],
-                              "with mate ID", mate_ID, BND_dict[mate_ID])
+                        # like case ALK&DUSP3|ENSG00000171094&ENSG00000108861
+                        # chr2    29256656        MantaBND:1:9840:9841:0:0:0:1    G       G[CHR17:43768837[ 
+                        # chr17   43768837        MantaBND:1:9840:9841:0:0:0:0    T       ]CHR2:29256656]T
+                        # bnd_U and bnd_V in VCF example
+                        print("Parallel strand mates", sv_call[2], sv_call[4], "with mate ID", mate_ID, BND_dict[mate_ID])
+                        # we have to process reverse-reverse and forward-forward cases separate
+                        if genes_to_join[0].strand > 0:
+                            print("Forward-forward genes")
+                        else:
+                            print("Reverse-reverse genes with a ]mate]B - B[mate[ fusion")
+                            # we have to have the right of the starting reverse gene (DUSP3 in case)
+                            # and the left of the second reverse
+                            (prime_5,prime_3) = (genes_to_join[0], genes_to_join[1])
+                            fusion = SV_Maker(prime_5, prime_3, None, None, start_chrom)
+                            fusion.assign_breakpoint_to_genes((sv_call[0], int(sv_call[1])))
+                            # this is for the mate
+                            breakpoint = extract_breakpoint(sv_call[4])
+                            fusion.assign_breakpoint_to_genes(breakpoint)
+                            svg_coords = fusion.fuse_translocations(fusion.DIR_RIGHT, fusion.DIR_LEFT)
+                            pic_count = makeSVG(svg_coords,
+                                                svg,
+                                                pic_count,
+                                                genes_to_join[0].gene_name,
+                                                genes_to_join[1].gene_name)
+                            fusion.print_properties()
                     else:
                         # find out whether it is B]mate]-B]mate] or [mate[B-[mate[B
                         rev_mate_re = re.compile(".*]CHR.*:[0-9].*]")
@@ -784,6 +814,7 @@ def makeSVG(fex, svg, pic_count, prime5name, prime3name):
     # background
     dwg.add(dwg.rect(insert=(0, 0), size=(w, h), fill='white', stroke='white'))
     # exons
+    pdb.set_trace()
     shapes = dwg.add(dwg.g(id='shapes', fill='red'))
     # 5' part of exons
     shapes = shape_intervals(dwg, shapes, fex[0], 'blue')
