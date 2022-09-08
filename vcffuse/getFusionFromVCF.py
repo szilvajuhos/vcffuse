@@ -814,7 +814,6 @@ def makeSVG(fex, svg, pic_count, prime5name, prime3name):
     # background
     dwg.add(dwg.rect(insert=(0, 0), size=(w, h), fill='white', stroke='white'))
     # exons
-    pdb.set_trace()
     shapes = dwg.add(dwg.g(id='shapes', fill='red'))
     # 5' part of exons
     shapes = shape_intervals(dwg, shapes, fex[0], 'blue')
